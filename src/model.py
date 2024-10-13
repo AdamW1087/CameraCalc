@@ -3,6 +3,7 @@ import csv
 import random
 from numpy.random import default_rng
 import math
+import sys
 
 
 # used by the tracker
@@ -75,7 +76,7 @@ def split_dataset(coords, labels, test_proportion, random_generator=random):
     return coords_train, coords_test, labels_train, labels_test
 
 
-def compute_accuracy(actual_labels, predicted_labels):
+def compute_accuracy(actual_labels, predicted_labels, debug):
     
     # ensure label lists have the same length
     assert len(actual_labels) == len(predicted_labels)
@@ -85,6 +86,50 @@ def compute_accuracy(actual_labels, predicted_labels):
     for i in range(len(actual_labels)):
         if actual_labels[i] == predicted_labels[i]:
             count += 1
+            
+            
+    # calculate and print debug info
+    # 0 -> {[7, 1], [8, 11]}
+    # 1 -> {[6, 6], [2, 1]}
+    # ...
+    # 9 -> {[1, 2], [4, 7]}
+    if debug:
+        # set up dictionary from what the label actually is
+        incorrect_guesses = {}
+        for label in np.arange(10).astype(str):
+            incorrect_guesses[label] = {}
+            
+            
+        for i in range(len(actual_labels)):
+            # filter for labels that arent matched
+            if actual_labels[i] != predicted_labels[i]:
+                # get map corresponding to the actual label
+                guesses = incorrect_guesses[actual_labels[i]]
+                
+                # inc counter at guessed label by 1 or set to 1 if label has not been guessed yet
+                if predicted_labels[i] in guesses:
+                    inc_count = guesses[predicted_labels[i]]
+                    inc_count += 1
+                    guesses[predicted_labels[i]] = inc_count
+                else:
+                    guesses[predicted_labels[i]] = 1
+                    
+        # output all incorrect guesses
+        for i in range(len(incorrect_guesses)):
+            # get map for each label type
+            attempts = incorrect_guesses[str(i)]
+            
+            # print how many guesses each label had
+            if len(attempts) != 0:
+                # for the correct label
+                print("For " + str(i) + ":")
+                
+                # print incorrect guesses
+                for pair in attempts.items():
+                    print(pair[0] + " was guessed " + str(pair[1]) + " times")
+                
+                # separate output for easier reading
+                print()
             
     # calculate decimal of how many are correct
     return float(count / len(actual_labels))
@@ -168,13 +213,13 @@ def input_sum(dists, dist_index):
     
     return dists
 
-def test_model(file_path):
+def test_model(file_path, debug):
     
     # load from known data
     features, labels = load_data(file_path)
 
     # split the data into training and testing sets (80% train, 20% test)
-    seed = 398264
+    seed = 674920
     rg = default_rng(seed)
     
     coords_train, coords_test, labels_train, labels_test = split_dataset(features, labels,
@@ -192,15 +237,25 @@ def test_model(file_path):
     labels_predictions = nn.predictMultiple(coords_test, 1)
     
     # calculate accuracy of model
-    accuracy = compute_accuracy(labels_test, labels_predictions)
+    accuracy = compute_accuracy(labels_test, labels_predictions, debug)
     
     print(accuracy)
 
 def main():
     file_path = 'src/point_history.csv'
-
+    # setup for modes
+    debug = False
+    
+    # check user input for mode choice
+    if len(sys.argv) > 1:
+        mode = sys.argv[1]
+        match mode:
+            case "debug":
+                debug = True
+                
+                
     # tests accuracy of model
-    test_model(file_path)
+    test_model(file_path, debug)
 
 if __name__ == '__main__':
     main()
