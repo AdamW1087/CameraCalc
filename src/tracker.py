@@ -10,10 +10,11 @@ def main():
     # setting up modes and variables
     write = False
     getData = False
-    guessNumber = False
+    guessInput = False
     labelGuess = ""
     path = []
     csv_path = 'src/point_history.csv'
+    expression = ""
     
     # set up nn model
     nn = set_up_data(csv_path)
@@ -43,28 +44,36 @@ def main():
             # reset path
             case 114:  # ord('r')
                 path = []
+                labelGuess = ""
                 
-            # enter guessing mode
-            case 103:  # ord('g')
-                guessNumber = not guessNumber
-                
-            # start/stop writing
-            case 32:   # ord(' ')
-                write = not write
+            # enter calculator mode
+            case 99:  # ord('c')
+                guessInput = not guessInput
+                getData = False
                 
             # enter data input mode
             case 105:  # ord('i')
                 getData = not getData
+                guessInput = False
                 
-            # use current path to predict input
-            case 112:  # ord('p')
-                if guessNumber:
-                    # normalises data and updates format
+            # start/stop writing
+            case 32:   # ord(' ')
+                write = not write
+                if not write and guessInput:
+                     # normalises data and updates format
                     processed_path = process_path(path)
                     
-                    # use data to predict input
+                    # use data to predict input       
                     labelGuess = nn.predictSingle(processed_path, 1)
+                    
+            # enter guess
+            case 13:  # enter key
+                if guessInput:
+                    # add new input to expression and reset current label and path
+                    expression += labelGuess
+                    labelGuess = ""
                     path = []
+                    print(expression)
                     
             # get input to attach label to new data
             case key if 48 <= key <= 57:  # ord('0') to ord('9')
@@ -86,20 +95,26 @@ def main():
         # undo camera mirror for more natural feed
         frame = cv2.flip(frame, 1)
     
-        # show if the user is in writing mode or not
-        cv2.putText(frame, "Writing, press space to lift the pen" if write else "Press W to save or Space to continue", (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+        # show the user mode
+        mode_type = ""
+        if not write and not guessInput and not getData:
+            mode_type = "Press C to enter Calculator Mode, or press I to enter Input Mode"
+        elif not write and guessInput:
+            mode_type = "In Calculator Mode, Space to draw, R to reset, Enter to input"
+        elif write and guessInput:
+            mode_type = "In Guessing Mode, press Space to stop drawing"
+        elif not write and getData:
+            mode_type = "In Input Mode, press the key you have drawn to enter it, Space to draw, R to reset"
+        elif write and getData:
+            mode_type = "In Input Mode, press Space to stop drawing"
+        
+        # show mode info
+        cv2.putText(frame, mode_type, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
            0.5, (255, 255, 255), 1, cv2.LINE_AA)
         
-        # show if user is in inputting data mode
-        cv2.putText(frame, "Entering data" if getData else "", (10, 50), cv2.FONT_HERSHEY_SIMPLEX,
-           0.5, (255, 255, 255), 1, cv2.LINE_AA)        
-        
-        # show if user is in guessing mode
-        cv2.putText(frame, "Guessing" if guessNumber else "", (10, 70), cv2.FONT_HERSHEY_SIMPLEX,
-           0.5, (255, 255, 255), 1, cv2.LINE_AA)
         
         # show the predicted label
-        cv2.putText(frame, "I think it is a " + labelGuess if guessNumber and labelGuess else "", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 
+        cv2.putText(frame, "I think it is a " + labelGuess if guessInput and labelGuess and not write else "", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 
             1, (255, 255, 255), 1, cv2.LINE_AA)
         
     
