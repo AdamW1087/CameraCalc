@@ -12,9 +12,14 @@ def main():
     getData = False
     guessInput = False
     labelGuess = ""
-    path = []
     csv_path = 'src/point_history.csv'
     expression = ""
+    
+    # current path is used to separate lines shown to users
+    current_path = []
+    paths = []
+    
+
     
     # set up nn model
     nn = set_up_data(csv_path)
@@ -43,7 +48,8 @@ def main():
             
             # reset path
             case 114:  # ord('r')
-                path = []
+                current_path = []
+                paths = []
                 labelGuess = ""
                 
             # enter calculator mode
@@ -59,9 +65,14 @@ def main():
             # start/stop writing
             case 32:   # ord(' ')
                 write = not write
+                # add new path to list of paths
+                if not write and current_path:
+                    paths.append(current_path)
+                    current_path = []
+                    
                 if not write and guessInput:
-                     # normalises data and updates format
-                    processed_path = process_path(path)
+                     # normalises data and updates format, flattens paths
+                    processed_path = process_path(sum(paths, []))
                     
                     # use data to predict input       
                     labelGuess = nn.predictSingle(processed_path, 1)
@@ -72,16 +83,27 @@ def main():
                     # add new input to expression and reset current label and path
                     expression += labelGuess
                     labelGuess = ""
-                    path = []
+                    paths = []
                     print(expression)
                     
             # get input to attach label to new data
-            case key if 48 <= key <= 57:  # ord('0') to ord('9')
+            # ord('0') to ord('9') and +, -, *, /
+            case key if (48 <= key <= 57) or key in {43, 45, 42, 47}:  
                 if getData and not write:
-                    label = chr(key)
-                    
+                    # get input as label
+                    if 48 <= key <= 57:  # 0-9
+                        label = chr(key)
+                    elif key == 43:  # ord('+')
+                        label = '+'
+                    elif key == 45:  # ord('-')
+                        label = '-'
+                    elif key == 42:  # ord('*')
+                        label = '*'
+                    elif key == 47:  # ord('/')
+                        label = '/'
+
                     # normalise path data to be inputted
-                    normalised_path = normalise_path(path)
+                    normalised_path = normalise_path(sum(paths, []))
 
                     # write label and normalised path to file
                     with open(csv_path, 'a', newline="") as file:
@@ -89,7 +111,7 @@ def main():
 
                         # write data as [label, [[x1,y1], [x2,y2]...] ]
                         writer.writerow([label, *normalised_path])
-                        path = []
+                        paths = []
 
             
         # undo camera mirror for more natural feed
@@ -130,14 +152,16 @@ def main():
                     # add coords of index to path
                     path.append([index_finger_tip.x, index_finger_tip.y])
                     
-        for i in range(1, len(path)):
-            # calculate newest points in path
-            prev_point = (int(path[i - 1][0] * frame.shape[1]), int(path[i - 1][1] * frame.shape[0]))
-            current_point = (int(path[i][0] * frame.shape[1]), int(path[i][1] * frame.shape[0]))
-            
-            # draw line (thin white with black border) to show user where they have drew
-            cv2.line(frame, prev_point, current_point, (0, 0, 0), 3)
-            cv2.line(frame, prev_point, current_point, (255, 255, 255), 2)
+        all_paths = paths + [current_path]
+        for path in all_paths:
+            for i in range(1, len(path)):
+                # calculate newest points in path
+                prev_point = (int(path[i - 1][0] * frame.shape[1]), int(path[i - 1][1] * frame.shape[0]))
+                current_point = (int(path[i][0] * frame.shape[1]), int(path[i][1] * frame.shape[0]))
+                
+                # draw line (thin white with black border) to show user where they have drew
+                cv2.line(frame, prev_point, current_point, (0, 0, 0), 3)
+                cv2.line(frame, prev_point, current_point, (255, 255, 255), 2)
 
     
         # show updated frame with info

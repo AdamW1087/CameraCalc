@@ -89,14 +89,16 @@ def compute_accuracy(actual_labels, predicted_labels, debug):
             
             
     # calculate and print debug info
-    # 0 -> {[7, 1], [8, 11]}
-    # 1 -> {[6, 6], [2, 1]}
+    # "0" -> {[7, 1], [8, 11]}
+    # "1" -> {[6, 6], [2, 1]}
     # ...
-    # 9 -> {[1, 2], [4, 7]}
+    # "9" -> {[1, 2], [4, 7]}
     if debug:
         # set up dictionary from what the label actually is
         incorrect_guesses = {}
-        for label in np.arange(10).astype(str):
+        num_labels = np.arange(10).astype(str)
+        op_labels = np.array(["+", "-", "*", "/"])
+        for label in np.concatenate((num_labels, op_labels)):
             incorrect_guesses[label] = {}
             
             
@@ -115,18 +117,18 @@ def compute_accuracy(actual_labels, predicted_labels, debug):
                     guesses[predicted_labels[i]] = 1
                     
         # output all incorrect guesses
-        for i in range(len(incorrect_guesses)):
+        for label in incorrect_guesses.keys():
             # get map for each label type
-            attempts = incorrect_guesses[str(i)]
+            attempts = incorrect_guesses[label]
             
             # print how many guesses each label had
             if len(attempts) != 0:
-                # for the correct label
-                print("For " + str(i) + ":")
+                # for the actual label
+                print("For " + label + ":")
                 
                 # print incorrect guesses
-                for pair in attempts.items():
-                    print(pair[0] + " was guessed " + str(pair[1]) + " times")
+                for fails in attempts.items():
+                    print(fails[0] + " was guessed " + str(fails[1]) + " times")
                 
                 # separate output for easier reading
                 print()
