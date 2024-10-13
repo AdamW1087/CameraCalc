@@ -12,9 +12,9 @@ def set_up_data(file_path):
     features, labels = load_data(file_path)
     
     # instantiate nn and load data
-    nn_classifier = NearestNeighbour()
-    nn_classifier.train(features, labels)
-    return nn_classifier
+    nn = KNearestNeighbours()
+    nn.train(features, labels)
+    return nn
 
 
 
@@ -90,7 +90,7 @@ def compute_accuracy(actual_labels, predicted_labels):
     return float(count / len(actual_labels))
 
 
-class NearestNeighbour:
+class KNearestNeighbours:
     # store known coords and labels
     def __init__(self):
         self.coords = np.array([])
@@ -183,13 +183,13 @@ def test_model(file_path):
     
     
     # create nn model
-    nn_classifier = NearestNeighbour()
+    nn = KNearestNeighbours()
     
     # train model using training data
-    nn_classifier.train(coords_train, labels_train)
+    nn.train(coords_train, labels_train)
     
     # predict labels for test data
-    labels_predictions = nn_classifier.predictMultiple(coords_test, 1)
+    labels_predictions = nn.predictMultiple(coords_test, 1)
     
     # calculate accuracy of model
     accuracy = compute_accuracy(labels_test, labels_predictions)

@@ -7,8 +7,6 @@ from process import normalise_path, process_path
 
 
 def main():
-
-    
     # setting up modes and variables
     write = False
     getData = False
