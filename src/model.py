@@ -121,12 +121,11 @@ class NearestNeighbour:
                 sum += math.sqrt(((coords[j][0] - self.coords[i][j][0]) ** 2) + ((coords[j][1] - self.coords[i][j][1]) ** 2))
             # get avg distance
             sum /= float(min(len(coords), len(self.coords[i])))
-            # add dist with index
-            dists.append((sum, i))
+            
+            # use binary search to input new distance
+            dists = input_sum(dists, (sum, i))
 
                 
-        dists.sort(key=lambda x: x[0])
-        
         # return nearest neighbour if k is 1
         if k == 1:
             return self.labels[dists[0][1]]
@@ -145,6 +144,29 @@ class NearestNeighbour:
             else:
                 # new label to neighbours, set count to 1
                 neighbours[self.labels[dists[i][1]]] = 1
+
+
+def input_sum(dists, dist_index):
+    # input pair based on dist
+    dist, _ = dist_index
+    
+    # intialise the 2 boundaries
+    start = 0
+    end = len(dists) - 1
+    
+    while start <= end:
+        mid = (start + end) // 2
+        
+        # shorten window to find desired index
+        if dists[mid][0] < dist:
+            start = mid + 1 
+        else:
+            end = mid - 1 
+        
+    # input (dist, index) into dists
+    dists.insert(start, dist_index)
+    
+    return dists
 
 def test_model(file_path):
     
