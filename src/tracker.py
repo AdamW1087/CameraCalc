@@ -14,6 +14,7 @@ def main():
     labelGuess = ""
     csv_path = 'src/point_history.csv'
     expression = ""
+    answer = False
     
     # current path is used to separate lines shown to users
     current_path = []
@@ -79,12 +80,22 @@ def main():
                     
             # enter guess
             case 13:  # enter key
-                if guessInput:
-                    # add new input to expression and reset current label and path
+                # reset answer
+                if answer:
+                    answer = False
+                    expression = ""
+                    
+                # evaluate expr
+                elif guessInput and not paths:
+                    expression = str(eval(expression))
+                    answer = True
+                    
+                # add new input to expression and reset current label and path
+                elif guessInput:
                     expression += labelGuess
                     labelGuess = ""
                     paths = []
-                    print(expression)
+
                     
             # get input to attach label to new data
             # ord('0') to ord('9') and +, -, *, /
@@ -122,7 +133,7 @@ def main():
         if not write and not guessInput and not getData:
             mode_type = "Press C to enter Calculator Mode, or press I to enter Input Mode"
         elif not write and guessInput:
-            mode_type = "In Calculator Mode, Space to draw, R to reset, Enter to input"
+            mode_type = "In Calculator Mode, Space to draw, R to reset, Enter to input/calculate"
         elif write and guessInput:
             mode_type = "In Guessing Mode, press Space to stop drawing"
         elif not write and getData:
@@ -136,8 +147,18 @@ def main():
         
         
         # show the predicted label
-        cv2.putText(frame, "I think it is a " + labelGuess if guessInput and labelGuess and not write else "", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 
-            1, (255, 255, 255), 1, cv2.LINE_AA)
+        cv2.putText(frame, "Are you inputting a " + labelGuess if guessInput and labelGuess and not write else "", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 
+            0.7, (255, 255, 255), 1, cv2.LINE_AA)
+
+        # show the expression
+        if guessInput:
+            if answer: 
+                cv2.putText(frame, "Result is: " + expression + ". Press enter to continue", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 
+                    0.7, (255, 255, 255), 1, cv2.LINE_AA)
+            else:
+                cv2.putText(frame, "Current expression is: " + expression if guessInput else "", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 
+                    0.7, (255, 255, 255), 1, cv2.LINE_AA)
+
         
     
         # process the frame to get hand landmarks
