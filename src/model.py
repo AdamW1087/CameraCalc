@@ -97,7 +97,7 @@ def compute_accuracy(actual_labels, predicted_labels, debug):
         # set up dictionary from what the label actually is
         incorrect_guesses = {}
         num_labels = np.arange(10).astype(str)
-        op_labels = np.array(["+", "-", "*", "/"])
+        op_labels = np.array(["+", "-", "*", "/", "="])
         for label in np.concatenate((num_labels, op_labels)):
             incorrect_guesses[label] = {}
             

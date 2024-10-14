@@ -20,8 +20,6 @@ def main():
     current_path = []
     paths = []
     
-
-    
     # set up nn model
     nn = set_up_data(csv_path)
 
@@ -84,22 +82,26 @@ def main():
                 if answer:
                     answer = False
                     expression = ""
-                    
-                # evaluate expr
-                elif guessInput and not paths:
-                    expression = str(eval(expression))
-                    answer = True
-                    
+                
                 # add new input to expression and reset current label and path
                 elif guessInput:
-                    expression += labelGuess
-                    labelGuess = ""
-                    paths = []
+                    # check if user has entered equals sign
+                    if labelGuess == "=":
+                        expression = str(eval(expression))
+                        answer = True
+                        paths = []
+                        labelGuess = ""
+                        
+                    # add next part to expr
+                    else:
+                        expression += labelGuess
+                        labelGuess = ""
+                        paths = []
 
                     
             # get input to attach label to new data
             # ord('0') to ord('9') and +, -, *, /
-            case key if (48 <= key <= 57) or key in {43, 45, 42, 47}:  
+            case key if (48 <= key <= 57) or key in {43, 45, 42, 47, 61}:  
                 if getData and not write:
                     # get input as label
                     if 48 <= key <= 57:  # 0-9
@@ -112,6 +114,8 @@ def main():
                         label = '*'
                     elif key == 47:  # ord('/')
                         label = '/'
+                    elif key == 61:  # ord('=')
+                        label = '='
 
                     # normalise path data to be inputted
                     normalised_path = normalise_path(sum(paths, []))
